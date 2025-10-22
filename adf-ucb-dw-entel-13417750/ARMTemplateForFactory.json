@@ -1,0 +1,610 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-ucb-dw-entel-13417750"
+		},
+		"ls_sa_datos_entel_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_sa_datos_entel'"
+		},
+		"ls_sql_dw_entel_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_sql_dw_entel'"
+		},
+		"ls_sql_dw_entel_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sql-ucb-sisinfo-entel-delta-13417750.database.windows.net"
+		},
+		"ls_sql_dw_entel_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "dw_entel_delta_13417750"
+		},
+		"ls_sql_dw_entel_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "branko"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_llamadas_entel_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sa_datos_entel",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Bronze"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "03.csv",
+						"container": "raw-entel"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "SERVICIO",
+						"type": "String"
+					},
+					{
+						"name": "REGISTRO",
+						"type": "String"
+					},
+					{
+						"name": "NUMERO_A",
+						"type": "String"
+					},
+					{
+						"name": "IMEI_A",
+						"type": "String"
+					},
+					{
+						"name": "RBS UTILIZADA_A",
+						"type": "String"
+					},
+					{
+						"name": "CELDA_A",
+						"type": "String"
+					},
+					{
+						"name": "LATITUD_LONGITUD_A",
+						"type": "String"
+					},
+					{
+						"name": "NUMERO_B",
+						"type": "String"
+					},
+					{
+						"name": "IMEI_B",
+						"type": "String"
+					},
+					{
+						"name": "RBS_UTILIZADA_B",
+						"type": "String"
+					},
+					{
+						"name": "CELDA_B",
+						"type": "String"
+					},
+					{
+						"name": "LATITUD_LONGITUD_B",
+						"type": "String"
+					},
+					{
+						"name": "FECHA",
+						"type": "String"
+					},
+					{
+						"name": "DURACION",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sa_datos_entel')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_tabla_llamadas_entel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_dw_entel",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Bronze"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "TIPO_SERVICIO",
+						"type": "varchar"
+					},
+					{
+						"name": "TIPO_REGISTRO",
+						"type": "varchar"
+					},
+					{
+						"name": "NUMERO_A",
+						"type": "varchar"
+					},
+					{
+						"name": "IMEI_A",
+						"type": "varchar"
+					},
+					{
+						"name": "RBS_UTILIZADA_A",
+						"type": "varchar"
+					},
+					{
+						"name": "CELDA_A",
+						"type": "varchar"
+					},
+					{
+						"name": "LATITUD_LONGITUD_A",
+						"type": "varchar"
+					},
+					{
+						"name": "NUMERO_B",
+						"type": "varchar"
+					},
+					{
+						"name": "IMEI_B",
+						"type": "varchar"
+					},
+					{
+						"name": "RBS_UTILIZADA_B",
+						"type": "varchar"
+					},
+					{
+						"name": "CELDA_B",
+						"type": "varchar"
+					},
+					{
+						"name": "LATITUD_LONGITUD_B",
+						"type": "varchar"
+					},
+					{
+						"name": "FECHA",
+						"type": "varchar"
+					},
+					{
+						"name": "DURACION",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "BRONZE",
+					"table": "Llamadas"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw_entel')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_sa_datos_entel')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('ls_sa_datos_entel_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_sql_dw_entel')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('ls_sql_dw_entel_properties_typeProperties_server')]",
+					"database": "[parameters('ls_sql_dw_entel_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('ls_sql_dw_entel_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('ls_sql_dw_entel_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_cargar_llamadas')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Bronze"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_llamadas_entel_csv",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ds_tabla_llamadas_entel",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [],
+					"scriptLines": [
+						"source(output(",
+						"          SERVICIO as string,",
+						"          REGISTRO as string,",
+						"          NUMERO_A as string,",
+						"          IMEI_A as string,",
+						"          {RBS UTILIZADA_A} as string,",
+						"          CELDA_A as string,",
+						"          LATITUD_LONGITUD_A as string,",
+						"          NUMERO_B as string,",
+						"          IMEI_B as string,",
+						"          RBS_UTILIZADA_B as string,",
+						"          CELDA_B as string,",
+						"          LATITUD_LONGITUD_B as string,",
+						"          FECHA as string,",
+						"          DURACION as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> source1",
+						"source1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          TIPO_SERVICIO as string,",
+						"          TIPO_REGISTRO as string,",
+						"          NUMERO_A as string,",
+						"          IMEI_A as string,",
+						"          RBS_UTILIZADA_A as string,",
+						"          CELDA_A as string,",
+						"          LATITUD_LONGITUD_A as string,",
+						"          NUMERO_B as string,",
+						"          IMEI_B as string,",
+						"          RBS_UTILIZADA_B as string,",
+						"          CELDA_B as string,",
+						"          LATITUD_LONGITUD_B as string,",
+						"          FECHA as string,",
+						"          DURACION as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          TIPO_SERVICIO = SERVICIO,",
+						"          TIPO_REGISTRO = REGISTRO,",
+						"          NUMERO_A,",
+						"          IMEI_A,",
+						"          RBS_UTILIZADA_A = {RBS UTILIZADA_A},",
+						"          CELDA_A,",
+						"          LATITUD_LONGITUD_A,",
+						"          NUMERO_B,",
+						"          IMEI_B,",
+						"          RBS_UTILIZADA_B,",
+						"          CELDA_B,",
+						"          LATITUD_LONGITUD_B,",
+						"          FECHA,",
+						"          DURACION",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_llamadas_entel_csv')]",
+				"[concat(variables('factoryId'), '/datasets/ds_tabla_llamadas_entel')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline_cargar_datos')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_cargar_llamadas",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Bronze"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_cargar_llamadas')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_silver_llamadas_entel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_dw_entel",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Silver"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "TIPO_SERVICIO",
+						"type": "varchar"
+					},
+					{
+						"name": "TIPO_REGISTRO",
+						"type": "varchar"
+					},
+					{
+						"name": "NUMERO_A",
+						"type": "bigint",
+						"precision": 19
+					},
+					{
+						"name": "IMEI_A",
+						"type": "bigint",
+						"precision": 19
+					},
+					{
+						"name": "RBS_UTILIZADA_A",
+						"type": "varchar"
+					},
+					{
+						"name": "CELDA_A",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "LATITUD_LONGITUD_A",
+						"type": "varchar"
+					},
+					{
+						"name": "NUMERO_B",
+						"type": "bigint",
+						"precision": 19
+					},
+					{
+						"name": "IMEI_B",
+						"type": "bigint",
+						"precision": 19
+					},
+					{
+						"name": "RBS_UTILIZADA_B",
+						"type": "varchar"
+					},
+					{
+						"name": "CELDA_B",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "LATITUD_LONGITUD_B",
+						"type": "varchar"
+					},
+					{
+						"name": "FECHA",
+						"type": "date"
+					},
+					{
+						"name": "DURACION",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "SILVER",
+					"table": "LlamadasLimpias"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw_entel')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_silver_limpiar_datos')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Silver"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_tabla_llamadas_entel",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ds_silver_llamadas_entel",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "select1"
+						},
+						{
+							"name": "derivedColumn1"
+						},
+						{
+							"name": "cast1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          TIPO_SERVICIO as string,",
+						"          TIPO_REGISTRO as string,",
+						"          NUMERO_A as string,",
+						"          IMEI_A as string,",
+						"          RBS_UTILIZADA_A as string,",
+						"          CELDA_A as string,",
+						"          LATITUD_LONGITUD_A as string,",
+						"          NUMERO_B as string,",
+						"          IMEI_B as string,",
+						"          RBS_UTILIZADA_B as string,",
+						"          CELDA_B as string,",
+						"          LATITUD_LONGITUD_B as string,",
+						"          FECHA as string,",
+						"          DURACION as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source1",
+						"source1 select(mapColumn(",
+						"          TIPO_SERVICIO,",
+						"          TIPO_REGISTRO,",
+						"          NUMERO_A,",
+						"          IMEI_A,",
+						"          RBS_UTILIZADA_A,",
+						"          CELDA_A,",
+						"          LATITUD_LONGITUD_A,",
+						"          NUMERO_B,",
+						"          IMEI_B,",
+						"          RBS_UTILIZADA_B,",
+						"          CELDA_B,",
+						"          LATITUD_LONGITUD_B,",
+						"          FECHA,",
+						"          DURACION",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 derive(FECHA = trim(FECHA)) ~> derivedColumn1",
+						"derivedColumn1 cast(output(",
+						"          FECHA as date 'dd-MM-yyyy',",
+						"          DURACION as timestamp 'HH:mm:ss'",
+						"     ),",
+						"     errors: true) ~> cast1",
+						"cast1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          TIPO_SERVICIO as string,",
+						"          TIPO_REGISTRO as string,",
+						"          NUMERO_A as long,",
+						"          IMEI_A as long,",
+						"          RBS_UTILIZADA_A as string,",
+						"          CELDA_A as integer,",
+						"          LATITUD_LONGITUD_A as string,",
+						"          NUMERO_B as long,",
+						"          IMEI_B as long,",
+						"          RBS_UTILIZADA_B as string,",
+						"          CELDA_B as integer,",
+						"          LATITUD_LONGITUD_B as string,",
+						"          FECHA as date,",
+						"          DURACION as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          TIPO_SERVICIO,",
+						"          TIPO_REGISTRO,",
+						"          NUMERO_A,",
+						"          IMEI_A,",
+						"          RBS_UTILIZADA_A,",
+						"          CELDA_A,",
+						"          LATITUD_LONGITUD_A,",
+						"          NUMERO_B,",
+						"          IMEI_B,",
+						"          RBS_UTILIZADA_B,",
+						"          CELDA_B,",
+						"          LATITUD_LONGITUD_B,",
+						"          FECHA,",
+						"          DURACION",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_tabla_llamadas_entel')]",
+				"[concat(variables('factoryId'), '/datasets/ds_silver_llamadas_entel')]"
+			]
+		}
+	]
+}
