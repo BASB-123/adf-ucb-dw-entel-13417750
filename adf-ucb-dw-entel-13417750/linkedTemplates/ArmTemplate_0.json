@@ -156,87 +156,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/ds_tabla_llamadas_entel')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_sql_dw_entel",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Bronze"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [
-					{
-						"name": "TIPO_SERVICIO",
-						"type": "varchar"
-					},
-					{
-						"name": "TIPO_REGISTRO",
-						"type": "varchar"
-					},
-					{
-						"name": "NUMERO_A",
-						"type": "varchar"
-					},
-					{
-						"name": "IMEI_A",
-						"type": "varchar"
-					},
-					{
-						"name": "RBS_UTILIZADA_A",
-						"type": "varchar"
-					},
-					{
-						"name": "CELDA_A",
-						"type": "varchar"
-					},
-					{
-						"name": "LATITUD_LONGITUD_A",
-						"type": "varchar"
-					},
-					{
-						"name": "NUMERO_B",
-						"type": "varchar"
-					},
-					{
-						"name": "IMEI_B",
-						"type": "varchar"
-					},
-					{
-						"name": "RBS_UTILIZADA_B",
-						"type": "varchar"
-					},
-					{
-						"name": "CELDA_B",
-						"type": "varchar"
-					},
-					{
-						"name": "LATITUD_LONGITUD_B",
-						"type": "varchar"
-					},
-					{
-						"name": "FECHA",
-						"type": "varchar"
-					},
-					{
-						"name": "DURACION",
-						"type": "varchar"
-					}
-				],
-				"typeProperties": {
-					"schema": "BRONZE",
-					"table": "Llamadas"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw_entel')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/ds_silver_llamadas_entel')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -318,6 +237,87 @@
 				"typeProperties": {
 					"schema": "SILVER",
 					"table": "LlamadasLimpias"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw_entel')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_tabla_llamadas_entel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_dw_entel",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Bronze"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "TIPO_SERVICIO",
+						"type": "varchar"
+					},
+					{
+						"name": "TIPO_REGISTRO",
+						"type": "varchar"
+					},
+					{
+						"name": "NUMERO_A",
+						"type": "varchar"
+					},
+					{
+						"name": "IMEI_A",
+						"type": "varchar"
+					},
+					{
+						"name": "RBS_UTILIZADA_A",
+						"type": "varchar"
+					},
+					{
+						"name": "CELDA_A",
+						"type": "varchar"
+					},
+					{
+						"name": "LATITUD_LONGITUD_A",
+						"type": "varchar"
+					},
+					{
+						"name": "NUMERO_B",
+						"type": "varchar"
+					},
+					{
+						"name": "IMEI_B",
+						"type": "varchar"
+					},
+					{
+						"name": "RBS_UTILIZADA_B",
+						"type": "varchar"
+					},
+					{
+						"name": "CELDA_B",
+						"type": "varchar"
+					},
+					{
+						"name": "LATITUD_LONGITUD_B",
+						"type": "varchar"
+					},
+					{
+						"name": "FECHA",
+						"type": "varchar"
+					},
+					{
+						"name": "DURACION",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "BRONZE",
+					"table": "Llamadas"
 				}
 			},
 			"dependsOn": [
@@ -501,10 +501,11 @@
 						"     ),",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> select1",
-						"select1 derive(FECHA = trim(FECHA)) ~> derivedColumn1",
+						"select1 derive(FECHA = trim(FECHA),",
+						"          DURACION = toInteger(     iif(         isNull(DURACION) || DURACION == '',          '0',          toString(             (toInteger(split(DURACION, ':')[1]) * 3600) +              (toInteger(split(DURACION, ':')[2]) * 60) +              toInteger(split(DURACION, ':')[3])         )     ) )) ~> derivedColumn1",
 						"derivedColumn1 cast(output(",
 						"          FECHA as date 'dd-MM-yyyy',",
-						"          DURACION as timestamp 'HH:mm:ss'",
+						"          DURACION as integer",
 						"     ),",
 						"     errors: true) ~> cast1",
 						"cast1 sink(allowSchemaDrift: true,",
@@ -604,6 +605,55 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/df_cargar_llamadas')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline_limpiar_datos')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_silver_limpiar_datos",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Silver"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_silver_limpiar_datos')]"
 			]
 		}
 	]
