@@ -1,12 +1,12 @@
 {
-	"name": "ds_tabla_llamadas_entel",
+	"name": "ds_silver_llamadas_entel",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "ls_sql_dw_entel",
 			"type": "LinkedServiceReference"
 		},
 		"folder": {
-			"name": "Bronze"
+			"name": "Silver"
 		},
 		"annotations": [],
 		"type": "AzureSqlTable",
@@ -21,11 +21,13 @@
 			},
 			{
 				"name": "NUMERO_A",
-				"type": "varchar"
+				"type": "bigint",
+				"precision": 19
 			},
 			{
 				"name": "IMEI_A",
-				"type": "varchar"
+				"type": "bigint",
+				"precision": 19
 			},
 			{
 				"name": "RBS_UTILIZADA_A",
@@ -33,7 +35,8 @@
 			},
 			{
 				"name": "CELDA_A",
-				"type": "varchar"
+				"type": "int",
+				"precision": 10
 			},
 			{
 				"name": "LATITUD_LONGITUD_A",
@@ -41,11 +44,13 @@
 			},
 			{
 				"name": "NUMERO_B",
-				"type": "varchar"
+				"type": "bigint",
+				"precision": 19
 			},
 			{
 				"name": "IMEI_B",
-				"type": "varchar"
+				"type": "bigint",
+				"precision": 19
 			},
 			{
 				"name": "RBS_UTILIZADA_B",
@@ -53,7 +58,8 @@
 			},
 			{
 				"name": "CELDA_B",
-				"type": "varchar"
+				"type": "int",
+				"precision": 10
 			},
 			{
 				"name": "LATITUD_LONGITUD_B",
@@ -61,16 +67,17 @@
 			},
 			{
 				"name": "FECHA",
-				"type": "varchar"
+				"type": "date"
 			},
 			{
 				"name": "DURACION",
-				"type": "varchar"
+				"type": "int",
+				"precision": 10
 			}
 		],
 		"typeProperties": {
-			"schema": "BRONZE",
-			"table": "Llamadas"
+			"schema": "SILVER",
+			"table": "LlamadasLimpias"
 		}
 	}
 }
