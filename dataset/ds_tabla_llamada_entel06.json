@@ -1,0 +1,52 @@
+{
+	"name": "ds_tabla_llamada_entel06",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_dw_entel",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Bronze"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "FECHA_INICIO",
+				"type": "varchar"
+			},
+			{
+				"name": "FECHA_FIN",
+				"type": "varchar"
+			},
+			{
+				"name": "NUMERO",
+				"type": "varchar"
+			},
+			{
+				"name": "IMEI",
+				"type": "varchar"
+			},
+			{
+				"name": "RBS_UTILIZA CELDA",
+				"type": "varchar"
+			},
+			{
+				"name": "LATITUD LON SUBIDOS",
+				"type": "varchar"
+			},
+			{
+				"name": "DESCARGADOS",
+				"type": "varchar"
+			},
+			{
+				"name": "TOTAL",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "Bronze",
+			"table": "UsoConexionRaw_05_06"
+		}
+	}
+}

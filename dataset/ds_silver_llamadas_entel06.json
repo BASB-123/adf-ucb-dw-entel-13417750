@@ -1,0 +1,74 @@
+{
+	"name": "ds_silver_llamadas_entel06",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_dw_entel",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Silver"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ID_CONEXION",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "NUMERO",
+				"type": "varchar"
+			},
+			{
+				"name": "IMEI",
+				"type": "varchar"
+			},
+			{
+				"name": "FECHA_INICIO",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "FECHA_FIN",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "BYTES_SUBIDOS",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "BYTES_DESCARGADOS",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "BYTES_TOTAL",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "RBS_UTILIZA_CELDA",
+				"type": "varchar"
+			},
+			{
+				"name": "LATITUD",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "LONGITUD",
+				"type": "float",
+				"precision": 15
+			}
+		],
+		"typeProperties": {
+			"schema": "Silver",
+			"table": "UsoConexion"
+		}
+	}
+}
