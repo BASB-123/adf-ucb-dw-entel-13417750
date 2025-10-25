@@ -1,0 +1,112 @@
+{
+	"name": "df_silver_limpiar_datos06",
+	"properties": {
+		"folder": {
+			"name": "Silver"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_tabla_llamada_entel06",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_silver_llamadas_entel06",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "derivedColumn2"
+				},
+				{
+					"name": "derivedColumn3"
+				},
+				{
+					"name": "select1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          FECHA_INICIO as string,",
+				"          FECHA_FIN as string,",
+				"          NUMERO as string,",
+				"          IMEI as string,",
+				"          {RBS_UTILIZA CELDA} as string,",
+				"          {LATITUD LON SUBIDOS} as string,",
+				"          DESCARGADOS as string,",
+				"          TOTAL as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> source1",
+				"source1 derive(FECHA_INICIO = toTimestamp(replace(trim(regexReplace(FECHA_INICIO, '\\\\s+', ' ')), '/', '-'), 'M-d-yyyy HH:mm'),",
+				"          FECHA_FIN = toTimestamp(replace(trim(regexReplace(FECHA_FIN, '\\\\s+', ' ')), '/', '-'), 'M-d-yyyy HH:mm'),",
+				"          COORD_PARTES = split({LATITUD LON SUBIDOS}, ',')) ~> derivedColumn1",
+				"derivedColumn1 derive(LATITUD_TEMP = toFloat(concat(COORD_PARTES[1], '.', COORD_PARTES[2])),",
+				"          LONGITUD_TEMP = toFloat(concat(COORD_PARTES[3], '.', COORD_PARTES[4]))) ~> derivedColumn2",
+				"derivedColumn2 derive(LATITUD = iif(isNull(LATITUD_TEMP), 0.0, LATITUD_TEMP),",
+				"          LONGITUD = iif(isNull(LONGITUD_TEMP), 0.0, LONGITUD_TEMP)) ~> derivedColumn3",
+				"derivedColumn3 select(mapColumn(",
+				"          FECHA_INICIO,",
+				"          FECHA_FIN,",
+				"          NUMERO,",
+				"          IMEI,",
+				"          {RBS_UTILIZA CELDA},",
+				"          DESCARGADOS,",
+				"          TOTAL,",
+				"          LATITUD,",
+				"          LONGITUD",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ID_CONEXION as integer,",
+				"          NUMERO as string,",
+				"          IMEI as string,",
+				"          FECHA_INICIO as timestamp,",
+				"          FECHA_FIN as timestamp,",
+				"          BYTES_SUBIDOS as long,",
+				"          BYTES_DESCARGADOS as long,",
+				"          BYTES_TOTAL as long,",
+				"          RBS_UTILIZA_CELDA as string,",
+				"          LATITUD as double,",
+				"          LONGITUD as double",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          NUMERO,",
+				"          IMEI,",
+				"          RBS_UTILIZA_CELDA = {RBS_UTILIZA CELDA},",
+				"          FECHA_INICIO,",
+				"          FECHA_FIN,",
+				"          LATITUD,",
+				"          LONGITUD,",
+				"          BYTES_DESCARGADOS = DESCARGADOS",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}
