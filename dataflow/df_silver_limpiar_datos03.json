@@ -1,0 +1,146 @@
+{
+	"name": "df_silver_limpiar_datos03",
+	"properties": {
+		"folder": {
+			"name": "Silver"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_tabla_llamada_entel03",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_silver_llamadas_entel03",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "derivedColumn2"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          SERVICIO as string,",
+				"          REGISTRO as string,",
+				"          NUMERO_A as string,",
+				"          IMEI_A as string,",
+				"          {RBS UTILIZADA_A} as string,",
+				"          CELDA_A as string,",
+				"          LATITUD_LONGITUD_A as string,",
+				"          NUMERO_B as string,",
+				"          IMEI_B as string,",
+				"          RBS_UTILIZADA_B as string,",
+				"          CELDA_B as string,",
+				"          LATITUD_LONGITUD_B as string,",
+				"          FECHA as string,",
+				"          DURACION as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> source1",
+				"source1 derive(FECHA = toTimestamp(FECHA, 'dd-MM-yyyy HH:mm:ss'),",
+				"          LATITUD_A = toFloat(split(LATITUD_LONGITUD_A, ',')[1]),",
+				"          LONGITUD_A = toFloat(split(LATITUD_LONGITUD_A, ',')[2]),",
+				"          LATITUD_B = toFloat(split(LATITUD_LONGITUD_B, ',')[1]),",
+				"          LONGITUD_B = toFloat(split(LATITUD_LONGITUD_B, ',')[2]),",
+				"          DURACION = toInteger(split(DURACION, ':')[1]) * 3600 + toInteger(split(DURACION, ':')[2]) * 60 + toInteger(split(DURACION, ':')[3]),",
+				"          NUMERO_A = toInteger(NUMERO_A),",
+				"          NUMERO_B = toInteger(NUMERO_B),",
+				"          CELDA_A = toInteger(CELDA_A),",
+				"          CELDA_B = toInteger(CELDA_B)) ~> derivedColumn1",
+				"derivedColumn1 select(mapColumn(",
+				"          SERVICIO,",
+				"          REGISTRO,",
+				"          NUMERO_A,",
+				"          IMEI_A,",
+				"          {RBS UTILIZADA_A},",
+				"          CELDA_A,",
+				"          NUMERO_B,",
+				"          IMEI_B,",
+				"          RBS_UTILIZADA_B,",
+				"          CELDA_B,",
+				"          FECHA,",
+				"          DURACION,",
+				"          LATITUD_A,",
+				"          LONGITUD_A,",
+				"          LATITUD_B,",
+				"          LONGITUD_B",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 derive(LATITUD_A = iif(isNull(LATITUD_A), 0.0, LATITUD_A),",
+				"          LONGITUD_A = iif(isNull(LONGITUD_A), 0.0, LONGITUD_A),",
+				"          LATITUD_B = iif(isNull(LATITUD_B), 0.0, LATITUD_B),",
+				"          LONGITUD_B = iif(isNull(LONGITUD_B), 0.0, LONGITUD_B),",
+				"          CELDA_A = iif(isNull(CELDA_A), 0, toInteger(CELDA_A)),",
+				"          CELDA_B = iif(isNull(CELDA_B), 0, toInteger(CELDA_B)),",
+				"          DURACION = iif(isNull(DURACION), 0, toInteger(DURACION))) ~> derivedColumn2",
+				"derivedColumn2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ID_LLAMADA as integer,",
+				"          SERVICIO as string,",
+				"          REGISTRO as string,",
+				"          FECHA as timestamp,",
+				"          DURACION_SEGUNDOS as integer,",
+				"          NUMERO_A as string,",
+				"          IMEI_A as string,",
+				"          RBS_UTILIZADA_A as string,",
+				"          CELDA_A as string,",
+				"          LATITUD_A as double,",
+				"          LONGITUD_A as double,",
+				"          NUMERO_B as string,",
+				"          IMEI_B as string,",
+				"          RBS_UTILIZADA_B as string,",
+				"          CELDA_B as string,",
+				"          LATITUD_B as double,",
+				"          LONGITUD_B as double",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          SERVICIO,",
+				"          REGISTRO,",
+				"          FECHA,",
+				"          DURACION_SEGUNDOS = DURACION,",
+				"          NUMERO_A,",
+				"          IMEI_A,",
+				"          RBS_UTILIZADA_A = {RBS UTILIZADA_A},",
+				"          CELDA_A,",
+				"          LATITUD_A,",
+				"          LONGITUD_A,",
+				"          NUMERO_B,",
+				"          IMEI_B,",
+				"          RBS_UTILIZADA_B,",
+				"          CELDA_B,",
+				"          LATITUD_B,",
+				"          LONGITUD_B",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}
